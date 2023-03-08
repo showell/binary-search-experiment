@@ -81,7 +81,7 @@ sanity_check(ss)
 
 
 def test_easy_numbers(factory):
-    M = 1000
+    M = 1500
     numbers = [100 * (i) for i in range(M)]
     searcher = factory(numbers)
     assert searcher.search(-1) == "L"
@@ -99,19 +99,20 @@ def test_easy_numbers(factory):
 
 test_easy_numbers(SimpleSearcher)
 
-def make_nested_container(lst):
+def make_nested_container(lst, chunk_size):
     assert len(lst) > 0
 
-    if len(lst) < 100:
+    if len(lst) <= chunk_size:
         return SimpleSearcher(lst)
+
+    recurse = lambda lst: make_nested_container(lst, chunk_size)
 
     sub_lists = []
     i = 0
-    chunk_size = 30
     while i < len(lst):
         sub_lists.append(lst[i:i+chunk_size])
         i += chunk_size
 
-    return make_nested_container([make_nested_container(sub_list) for sub_list in sub_lists])
+    return recurse([recurse(sub_list) for sub_list in sub_lists])
 
-test_easy_numbers(make_nested_container)
+test_easy_numbers(lambda lst: make_nested_container(lst, 10))
