@@ -91,10 +91,10 @@ If you can make the tree more shallow (i.e. with wider nodes),
 then you can make shorter traverals down the tree, and maybe
 at certain nodes you will get lucky and exploit data locality.
 
-The problem with making nodes wider is that for each 2x reduction
-in tree height, you get a 2**x widening of each node.  So, for
-example, in order to make a tree six times shorter you have to
-process 64 items at every node.
+The problem with making nodes wider is that for each reduction
+in tree height, you induce an exponential widening of each node.  So, for
+example, in order to make a tree six times shorter you would have to
+process 64x more items at every node.
 
 Using bigger numbers, consider two approaches for handling a
 million items:
@@ -106,7 +106,9 @@ The first approach seems clearly superior, unless you imagine that your
 computer **strongly** benefits from processing all 1000 elements sort
 of as a single unit of work.  It's not a completely preposterous
 notion with modern computers, but it would be a big assumption if
-you decided to go with the second approach.
+you decided to go with the second approach purely for performance reasons.
+(There may be other legimitate reasons for the second approach, such
+as making it easier for the human to understand the algorithm.)
 
 My hypothesis is that there's a middle ground between 2 and 1000
 in terms of granularity.
