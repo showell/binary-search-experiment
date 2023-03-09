@@ -112,6 +112,20 @@ as making it easier for the human to understand the algorithm.)
 
 My hypothesis is that there's a middle ground between 2 and 1000
 in terms of granularity.
+
+### My approach ###
+
+I spent a day fiddling with Python to implement three search classes
+with the same protocols:
+
+    SimpleSearch
+    NestedSearchTree
+    BinarySearcher
+
+I then ran some stress tests to see how they perform.
+
+At this point I would go to [the code](https://github.com/showell/binary-search-experiment/blob/main/search.py)
+to see the details. (I commented the code heavily after the fact.)
             
 ### Example output ###
 

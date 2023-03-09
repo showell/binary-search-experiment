@@ -114,6 +114,9 @@ STEP TWO:
            for super-granular nesting, we will probably double or triple
            the constant factor for the upper bound.
 
+        4) We don't directly store any "leaf" elements (unless you count
+           "min" and max").  We are basically just a controller class
+           for our child containers.
 """
 
 class NestedSearchTree:
@@ -307,7 +310,7 @@ test_easy_numbers(BinarySearcher)
 
         MOST COMPLICATED TREE:
 
-            After retursion, this function could return something like:
+            After recursion, this function could return something like:
 
 
                 A root NestedSearchTree
