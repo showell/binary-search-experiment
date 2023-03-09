@@ -2,11 +2,11 @@ import random
 import time
 import gc
 
-class SteveSearcher:
+class NestedSearchTree:
     def __init__(self, lst):
         self.lst = lst
         assert len(lst) > 0
-        self.contains_containers = type(self.lst[0]) == SteveSearcher
+        self.contains_containers = type(self.lst[0]) == NestedSearchTree
 
         if self.contains_containers:
             for i in range(len(lst) - 1):
@@ -60,37 +60,35 @@ class SteveSearcher:
                     return child
         return None
 
-SS = lambda *lst: SteveSearcher(lst)
+def sanity_check(s):
+    assert s.search(20) == "LEFT"
+    assert s.search(22) == "FOUND"
+    assert s.search(30) == "NOT_FOUND"
+    assert s.search(33) == "FOUND"
+    assert s.search(40) == "NOT_FOUND"
+    assert s.search(44) == "FOUND"
+    assert s.search(50) == "RIGHT"
 
-ss = SS(22, 33, 44)
+    assert s.successor(20) == 22
+    assert s.successor(21) == 22
+    assert s.successor(22) == 22
+    assert s.successor(23) == 33
+    assert s.successor(24) == 33
+    assert s.successor(30) == 33
+    assert s.successor(31) == 33
+    assert s.successor(32) == 33
+    assert s.successor(33) == 33
+    assert s.successor(43) == 44 
+    assert s.successor(44) == 44 
+    assert s.successor(45) is None
 
-def sanity_check(ss):
-    assert ss.search(20) == "LEFT"
-    assert ss.search(22) == "FOUND"
-    assert ss.search(30) == "NOT_FOUND"
-    assert ss.search(33) == "FOUND"
-    assert ss.search(40) == "NOT_FOUND"
-    assert ss.search(44) == "FOUND"
-    assert ss.search(50) == "RIGHT"
+NST = lambda *lst: NestedSearchTree(lst)
 
-    assert ss.successor(20) == 22
-    assert ss.successor(21) == 22
-    assert ss.successor(22) == 22
-    assert ss.successor(23) == 33
-    assert ss.successor(24) == 33
-    assert ss.successor(30) == 33
-    assert ss.successor(31) == 33
-    assert ss.successor(32) == 33
-    assert ss.successor(33) == 33
-    assert ss.successor(43) == 44 
-    assert ss.successor(44) == 44 
-    assert ss.successor(45) is None
-
-sanity_check(ss)
+# Use a flat searcher
+sanity_check(NST(22, 33, 44))
 
 # Nest the searchers.
-ss = SS(SS(22), SS(33, 44))
-sanity_check(ss)
+sanity_check(NST(NST(22), NST(33, 44)))
 
 def test_easy_numbers(factory):
     M = 1500
@@ -109,7 +107,7 @@ def test_easy_numbers(factory):
         assert searcher.search(100 * i) == "FOUND"
         assert searcher.search(100 * i - 17) == "NOT_FOUND"
 
-test_easy_numbers(SteveSearcher)
+test_easy_numbers(NestedSearchTree)
 
 class BinarySearcher:
     def __init__(self, lst):
@@ -159,7 +157,7 @@ class BinarySearcher:
 
 test_easy_numbers(BinarySearcher)
 
-def make_nested_container(lst, chunk_size):
+def build_searcher(lst, chunk_size):
     assert len(lst) > 0
 
     if chunk_size == 0:
@@ -168,9 +166,9 @@ def make_nested_container(lst, chunk_size):
     assert chunk_size > 1
 
     if len(lst) <= chunk_size:
-        return SteveSearcher(lst)
+        return NestedSearchTree(lst)
 
-    recurse = lambda lst: make_nested_container(lst, chunk_size)
+    recurse = lambda lst: build_searcher(lst, chunk_size)
 
     sub_lists = []
     i = 0
@@ -180,15 +178,15 @@ def make_nested_container(lst, chunk_size):
 
     return recurse([recurse(sub_list) for sub_list in sub_lists])
 
-test_easy_numbers(lambda lst: make_nested_container(lst, 10))
+test_easy_numbers(lambda lst: build_searcher(lst, 10))
 
 U = 100_000_000 # universe of ints
 
 def test_random_equivalencies():
     for i in range(10):
         numbers = sorted(random.sample(range(U), k=500))
-        lst1 = SteveSearcher(numbers) 
-        lst2 = make_nested_container(numbers, 5)
+        lst1 = NestedSearchTree(numbers) 
+        lst2 = build_searcher(numbers, 5)
         lst3 = BinarySearcher(numbers)
 
         test_numbers = random.sample(range(U), k=200)
@@ -204,7 +202,7 @@ test_random_equivalencies()
 TEST_NUMBERS = [float(n) for n in random.sample(range(U), k=6000)]
 
 def stress_test(numbers, chunk_size):
-    lst = make_nested_container(numbers, chunk_size)
+    lst = build_searcher(numbers, chunk_size)
 
     # Make sure our lst is at least plausibly correct.
     assert lst.search(numbers[0]) == "FOUND"
