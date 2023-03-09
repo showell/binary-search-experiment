@@ -2,58 +2,11 @@ import random
 import time
 import gc
 
-class BinarySearcher:
-    def __init__(self, lst):
-        self.lst = lst
-        assert len(lst) > 0
-        self.min = self.lst[0]
-        self.max = self.lst[-1]
-
-    def search(self, other):
-        if other < self.min:
-            return "LEFT"
-        if other > self.max:
-            return "RIGHT"
-
-        def f(i, j):
-            if i >= j:
-                return "NOT_FOUND"
-            mid = (i + j) // 2
-            if self.lst[mid] == other:
-                return "FOUND"
-            if other < self.lst[mid]:
-                return f(i, mid)
-            else:
-                return f(mid+1, j)
-
-        return f(0, len(self.lst))
-
-    def successor(self, other):
-        if other <= self.min:
-            return self.min
-        if other > self.max:
-            return None
-
-        def f(i, j, successor):
-            if i >= j:
-                return successor
-            mid = (i + j) // 2
-            if self.lst[mid] == other:
-                return other
-            if other < self.lst[mid]:
-                return f(i, mid, self.lst[mid])
-            else:
-                return f(mid+1, j, successor)
-
-        return f(0, len(self.lst), None)
-
-
 class SteveSearcher:
     def __init__(self, lst):
         self.lst = lst
         assert len(lst) > 0
-        self.contains_containers = hasattr(self.lst[0], "is_container")
-        self.is_container = True
+        self.contains_containers = type(self.lst[0]) == SteveSearcher
 
         if self.contains_containers:
             for i in range(len(lst) - 1):
@@ -73,6 +26,7 @@ class SteveSearcher:
             return "LEFT"
         if other > self.max:
             return "RIGHT"
+
         if self.contains_containers:
             for child in self.lst:
                 sub_result = child.search(other)
@@ -156,6 +110,53 @@ def test_easy_numbers(factory):
         assert searcher.search(100 * i - 17) == "NOT_FOUND"
 
 test_easy_numbers(SteveSearcher)
+
+class BinarySearcher:
+    def __init__(self, lst):
+        self.lst = lst
+        assert len(lst) > 0
+        self.min = self.lst[0]
+        self.max = self.lst[-1]
+
+    def search(self, other):
+        if other < self.min:
+            return "LEFT"
+        if other > self.max:
+            return "RIGHT"
+
+        def f(i, j):
+            if i >= j:
+                return "NOT_FOUND"
+            mid = (i + j) // 2
+            if self.lst[mid] == other:
+                return "FOUND"
+            if other < self.lst[mid]:
+                return f(i, mid)
+            else:
+                return f(mid+1, j)
+
+        return f(0, len(self.lst))
+
+    def successor(self, other):
+        if other <= self.min:
+            return self.min
+        if other > self.max:
+            return None
+
+        def f(i, j, successor):
+            if i >= j:
+                return successor
+            mid = (i + j) // 2
+            if self.lst[mid] == other:
+                return other
+            if other < self.lst[mid]:
+                return f(i, mid, self.lst[mid])
+            else:
+                return f(mid+1, j, successor)
+
+        return f(0, len(self.lst), None)
+
+
 test_easy_numbers(BinarySearcher)
 
 def make_nested_container(lst, chunk_size):
