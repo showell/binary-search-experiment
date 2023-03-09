@@ -2,24 +2,15 @@ import random
 import time
 import gc
 
-class NestedSearchTree:
+class SimpleSearch:
     def __init__(self, lst):
-        self.lst = lst
         assert len(lst) > 0
-        self.contains_containers = type(self.lst[0]) == NestedSearchTree
+        for i in range(len(lst) - 1):
+            assert lst[i] < lst[i+1]
 
-        if self.contains_containers:
-            for i in range(len(lst) - 1):
-                child1, child2 = self.lst[i], self.lst[i+1]
-                assert child1.max < child2.min
-            self.min = self.lst[0].min
-            self.max = self.lst[-1].max
-        else:
-            for i in range(len(lst) - 1):
-                child1, child2 = self.lst[i], self.lst[i+1]
-                assert child1 < child2
-            self.min = self.lst[0]
-            self.max = self.lst[-1]
+        self.lst = lst
+        self.min = self.lst[0]
+        self.max = self.lst[-1]
 
     def search(self, other):
         if other < self.min:
@@ -27,19 +18,12 @@ class NestedSearchTree:
         if other > self.max:
             return "RIGHT"
 
-        if self.contains_containers:
-            for child in self.lst:
-                sub_result = child.search(other)
-                if sub_result in ["NOT_FOUND", "LEFT"]:
-                    return "NOT_FOUND"
-                elif sub_result == "FOUND":
-                    return "FOUND"
-        else:
-            for child in self.lst:
-                if other == child:
-                    return "FOUND"
-                elif other < child:
-                    return "NOT_FOUND"
+        for child in self.lst:
+            if other == child:
+                return "FOUND"
+            elif other < child:
+                return "NOT_FOUND"
+
         assert False
 
     def successor(self, other):
@@ -49,15 +33,49 @@ class NestedSearchTree:
         if other > self.max:
             return None
 
-        if self.contains_containers:
-            for child in self.lst:
-                sub_successor = child.successor(other)
-                if sub_successor is not None:
-                    return sub_successor
-        else:
-            for child in self.lst:
-                if other <= child:
-                    return child
+        for child in self.lst:
+            if other <= child:
+                return child
+        return None
+
+class NestedSearchTree:
+    def __init__(self, lst):
+        assert len(lst) > 0
+        assert type(lst[0]) in [SimpleSearch, NestedSearchTree]
+
+        for i in range(len(lst) - 1):
+            child1, child2 = lst[i], lst[i+1]
+            assert child1.max < child2.min
+
+        self.lst = lst
+        self.min = self.lst[0].min
+        self.max = self.lst[-1].max
+
+    def search(self, other):
+        if other < self.min:
+            return "LEFT"
+        if other > self.max:
+            return "RIGHT"
+
+        for child in self.lst:
+            sub_result = child.search(other)
+            if sub_result in ["NOT_FOUND", "LEFT"]:
+                return "NOT_FOUND"
+            elif sub_result == "FOUND":
+                return "FOUND"
+        assert False
+
+    def successor(self, other):
+        # return smallest value x in lst such that other <= x
+        if other <= self.min:
+            return self.min
+        if other > self.max:
+            return None
+
+        for child in self.lst:
+            sub_successor = child.successor(other)
+            if sub_successor is not None:
+                return sub_successor
         return None
 
 def sanity_check(s):
@@ -82,13 +100,15 @@ def sanity_check(s):
     assert s.successor(44) == 44 
     assert s.successor(45) is None
 
+SS = lambda *lst: SimpleSearch(lst)
 NST = lambda *lst: NestedSearchTree(lst)
 
 # Use a flat searcher
-sanity_check(NST(22, 33, 44))
+sanity_check(SS(22, 33, 44))
 
 # Nest the searchers.
-sanity_check(NST(NST(22), NST(33, 44)))
+sanity_check(NST(SS(22), SS(33, 44)))
+sanity_check(NST(NST(SS(22), SS(33, 44))))
 
 def test_easy_numbers(factory):
     M = 1500
@@ -107,7 +127,7 @@ def test_easy_numbers(factory):
         assert searcher.search(100 * i) == "FOUND"
         assert searcher.search(100 * i - 17) == "NOT_FOUND"
 
-test_easy_numbers(NestedSearchTree)
+test_easy_numbers(SimpleSearch)
 
 class BinarySearcher:
     def __init__(self, lst):
@@ -166,7 +186,10 @@ def build_searcher(lst, chunk_size):
     assert chunk_size > 1
 
     if len(lst) <= chunk_size:
-        return NestedSearchTree(lst)
+        if type(lst[0]) in [SimpleSearch, NestedSearchTree]:
+            return NestedSearchTree(lst)
+        else:
+            return SimpleSearch(lst)
 
     recurse = lambda lst: build_searcher(lst, chunk_size)
 
@@ -185,7 +208,7 @@ U = 100_000_000 # universe of ints
 def test_random_equivalencies():
     for i in range(10):
         numbers = sorted(random.sample(range(U), k=500))
-        lst1 = NestedSearchTree(numbers) 
+        lst1 = SimpleSearch(numbers) 
         lst2 = build_searcher(numbers, 5)
         lst3 = BinarySearcher(numbers)
 
