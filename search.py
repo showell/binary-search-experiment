@@ -1,3 +1,7 @@
+import random
+import time
+import gc
+
 class SimpleSearcher:
     def __init__(self, lst):
         self.lst = lst
@@ -15,30 +19,37 @@ class SimpleSearcher:
             return "L"
         if other > self.max:
             return "R"
-        for child in self.lst:
-            if self.contains_containers:
+        if self.contains_containers:
+            for child in self.lst:
                 sub_result = child.search(other)
                 if sub_result in ["NOT_FOUND", "L"]:
                     return "NOT_FOUND"
                 elif sub_result == "FOUND":
                     return "FOUND"
-                assert sub_result == "R"
-            elif other == child:
-                return "FOUND"
-            elif other < child:
-                return "NOT_FOUND"
+        else:
+            for child in self.lst:
+                if other == child:
+                    return "FOUND"
+                elif other < child:
+                    return "NOT_FOUND"
         assert False
 
     def successor(self, other):
-        for child in self.lst:
-            child_min = self.child_min(child)
-            if other < child_min:
-                return child_min
-            
-            if self.contains_containers:
+        # return smallest value x in lst such that other <= x
+        if other <= self.min:
+            return self.min
+        if other > self.max:
+            return None
+
+        if self.contains_containers:
+            for child in self.lst:
                 sub_successor = child.successor(other)
                 if sub_successor is not None:
                     return sub_successor
+        else:
+            for child in self.lst:
+                if other <= child:
+                    return child
         return None
 
     def child_min(self, child):
@@ -62,15 +73,15 @@ def sanity_check(ss):
 
     assert ss.successor(20) == 22
     assert ss.successor(21) == 22
-    assert ss.successor(22) == 33
+    assert ss.successor(22) == 22
     assert ss.successor(23) == 33
     assert ss.successor(24) == 33
     assert ss.successor(30) == 33
     assert ss.successor(31) == 33
     assert ss.successor(32) == 33
-    assert ss.successor(33) == 44
+    assert ss.successor(33) == 33
     assert ss.successor(43) == 44 
-    assert ss.successor(44) is None
+    assert ss.successor(44) == 44 
     assert ss.successor(45) is None
 
 sanity_check(ss)
@@ -101,6 +112,7 @@ test_easy_numbers(SimpleSearcher)
 
 def make_nested_container(lst, chunk_size):
     assert len(lst) > 0
+    assert chunk_size > 1
 
     if len(lst) <= chunk_size:
         return SimpleSearcher(lst)
@@ -116,3 +128,45 @@ def make_nested_container(lst, chunk_size):
     return recurse([recurse(sub_list) for sub_list in sub_lists])
 
 test_easy_numbers(lambda lst: make_nested_container(lst, 10))
+
+U = 10 * 1000 * 1000 # universe of ints
+
+def test_random_equivalencies():
+    for i in range(10):
+        numbers = sorted(random.sample(range(U), k=500))
+        lst1 = SimpleSearcher(numbers) 
+        lst2 = make_nested_container(numbers, 5)
+        lst3 = make_nested_container(numbers, 7)
+
+        test_numbers = random.sample(range(U), k=200)
+        for number in test_numbers:
+            assert lst1.search(number) == lst2.search(number) == lst3.search(number)
+            assert lst1.successor(number) == lst2.successor(number) == lst3.successor(number)
+        
+
+test_random_equivalencies()
+
+TEST_NUMBERS = random.sample(range(U), k=3000)
+
+def stress_test(numbers, chunk_size):
+    lst = make_nested_container(numbers, chunk_size)
+    result = []
+
+    gc.collect()
+    print(f"Starting chunk size {chunk_size}")
+    t = time.time()
+    for n in TEST_NUMBERS:
+        result.append((lst.search(n), lst.successor(n)))
+    delay = time.time() - t
+    delay = (delay * 1000000) / len(TEST_NUMBERS)
+    print(f"done with chunk size {chunk_size}: {delay: .1f} microseconds per trial")
+
+print("Building sample data")
+numbers = sorted(random.sample(range(U), k=1000000))
+for i in range(2, 17):
+    stress_test(numbers, i)
+stress_test(numbers, 32)
+stress_test(numbers, 64)
+stress_test(numbers, 128)
+stress_test(numbers, 500)
+stress_test(numbers, 3000)
