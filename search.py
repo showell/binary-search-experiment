@@ -2,7 +2,53 @@ import random
 import time
 import gc
 
-class SimpleSearcher:
+class BinarySearcher:
+    def __init__(self, lst):
+        self.lst = lst
+        assert len(lst) > 0
+        self.min = self.lst[0]
+        self.max = self.lst[-1]
+
+    def search(self, other):
+        if other < self.min:
+            return "L"
+        if other > self.max:
+            return "R"
+
+        def f(i, j):
+            if i >= j:
+                return "NOT_FOUND"
+            mid = (i + j) // 2
+            if self.lst[mid] == other:
+                return "FOUND"
+            if other < self.lst[mid]:
+                return f(i, mid)
+            else:
+                return f(mid+1, j)
+
+        return f(0, len(self.lst))
+
+    def successor(self, other):
+        if other <= self.min:
+            return self.min
+        if other > self.max:
+            return None
+
+        def f(i, j, successor):
+            if i >= j:
+                return successor
+            mid = (i + j) // 2
+            if self.lst[mid] == other:
+                return other
+            if other < self.lst[mid]:
+                return f(i, mid, self.lst[mid])
+            else:
+                return f(mid+1, j, successor)
+
+        return f(0, len(self.lst), None)
+
+
+class SteveSearcher:
     def __init__(self, lst):
         self.lst = lst
         assert len(lst) > 0
@@ -58,7 +104,7 @@ class SimpleSearcher:
     def child_max(self, child):
         return child.max if self.contains_containers else child
 
-SS = lambda *lst: SimpleSearcher(lst)
+SS = lambda *lst: SteveSearcher(lst)
 
 ss = SS(22, 33, 44)
 
@@ -90,7 +136,6 @@ sanity_check(ss)
 ss = SS(SS(22), SS(33, 44))
 sanity_check(ss)
 
-
 def test_easy_numbers(factory):
     M = 1500
     numbers = [100 * (i) for i in range(M)]
@@ -100,7 +145,7 @@ def test_easy_numbers(factory):
     assert searcher.successor(M*100) == None
     
     for i in range(M-1):
-        assert searcher.search(100 * i) == "FOUND"
+        assert searcher.search(float(100 * i)) == "FOUND"
         assert searcher.successor(100 * i - 7) == 100 * i
         assert searcher.search(100 * i + 17) == "NOT_FOUND"
         
@@ -108,14 +153,19 @@ def test_easy_numbers(factory):
         assert searcher.search(100 * i) == "FOUND"
         assert searcher.search(100 * i - 17) == "NOT_FOUND"
 
-test_easy_numbers(SimpleSearcher)
+test_easy_numbers(SteveSearcher)
+test_easy_numbers(BinarySearcher)
 
 def make_nested_container(lst, chunk_size):
     assert len(lst) > 0
+
+    if chunk_size == 0:
+        return BinarySearcher(lst)
+
     assert chunk_size > 1
 
     if len(lst) <= chunk_size:
-        return SimpleSearcher(lst)
+        return SteveSearcher(lst)
 
     recurse = lambda lst: make_nested_container(lst, chunk_size)
 
@@ -134,9 +184,9 @@ U = 10 * 1000 * 1000 # universe of ints
 def test_random_equivalencies():
     for i in range(10):
         numbers = sorted(random.sample(range(U), k=500))
-        lst1 = SimpleSearcher(numbers) 
+        lst1 = SteveSearcher(numbers) 
         lst2 = make_nested_container(numbers, 5)
-        lst3 = make_nested_container(numbers, 7)
+        lst3 = BinarySearcher(numbers)
 
         test_numbers = random.sample(range(U), k=200)
         for number in test_numbers:
@@ -146,27 +196,42 @@ def test_random_equivalencies():
 
 test_random_equivalencies()
 
-TEST_NUMBERS = random.sample(range(U), k=3000)
+# Make our test numbers floats so that comparisons are perhaps
+# more expensive than normal int comparisons.
+TEST_NUMBERS = [float(n) for n in random.sample(range(U), k=6000)]
 
 def stress_test(numbers, chunk_size):
     lst = make_nested_container(numbers, chunk_size)
-    result = []
+
+    # Make sure our lst is at least plausibly correct.
+    assert lst.search(numbers[0]) == "FOUND"
+    assert lst.search(-27.0) == "L"
+    assert lst.search(U+1) == "R"
+    assert lst.successor(0) == numbers[0]
+    assert lst.successor(U+1) == None
 
     gc.collect()
-    print(f"Starting chunk size {chunk_size}")
     t = time.time()
     for n in TEST_NUMBERS:
-        result.append((lst.search(n), lst.successor(n)))
+        _ = lst.successor(n)
+        _ = lst.search(n)
     delay = time.time() - t
     delay = (delay * 1000000) / len(TEST_NUMBERS)
-    print(f"done with chunk size {chunk_size}: {delay: .1f} microseconds per trial")
+    flavor = f"chunk size {chunk_size: 3d}" if chunk_size else " binary search"
+    print(f"done with {flavor}: {delay: .1f} microseconds per trial")
 
 print("Building sample data")
 numbers = sorted(random.sample(range(U), k=1000000))
+
+stress_test(numbers, 0)
 for i in range(2, 17):
     stress_test(numbers, i)
+print("Re-test binary for another data point")
+stress_test(numbers, 0)
+print("Try some big numbers")
 stress_test(numbers, 32)
 stress_test(numbers, 64)
 stress_test(numbers, 128)
 stress_test(numbers, 500)
 stress_test(numbers, 3000)
+stress_test(numbers, 6000)
