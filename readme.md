@@ -28,6 +28,16 @@ Build some kind of tree-based data structure
 that lets you use divide-and-conquer tactics for basic
 operations like searching, inserting, and deleting.
 
+My solution essentially produces this kind of structure:
+
+<pre>
+    NestedSearchTree (single root)
+    NestedSearchTree (K)
+    NestedSearchTree (K*L)
+    SimpleSearch     (K*L*M)
+    integers         (K*L*M*P)
+</pre>
+
 ### Discussion ###
 
 #### Prior work ####
@@ -176,6 +186,3 @@ done with chunk size  6000:  2281.9 microseconds per trial
    (i.e small chunks) while being able to efficiently
    compute things in linear loops (i.e. big chunks) seems
    to be about 3 to 10 elements.
-
-                            
-

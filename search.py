@@ -326,7 +326,7 @@ test_easy_numbers(BinarySearcher)
                 NestedSearchTree (single root)
                 NestedSearchTree (K)
                 NestedSearchTree (K*L)
-                BinarySearcher   (K*L*M)
+                SimpleSearch     (K*L*M)
                 integers         (K*L*M*P)
 
             (And, of course, we are not constrained to integers; we just
