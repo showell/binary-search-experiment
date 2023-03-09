@@ -112,3 +112,56 @@ as making it easier for the human to understand the algorithm.)
 
 My hypothesis is that there's a middle ground between 2 and 1000
 in terms of granularity.
+            
+### Example output ###
+
+Here is a typical run, but the timings here are not super deterministic.
+
+<pre>
+Building sample data
+done with  binary search:  33.0 microseconds per trial
+done with chunk size   2:  38.5 microseconds per trial
+done with chunk size   3:  43.2 microseconds per trial
+done with chunk size   4:  37.4 microseconds per trial
+done with chunk size   5:  26.8 microseconds per trial
+done with chunk size   6:  31.3 microseconds per trial
+done with chunk size   7:  35.7 microseconds per trial
+done with chunk size   8:  53.0 microseconds per trial
+done with chunk size   9:  42.0 microseconds per trial
+done with chunk size  10:  41.9 microseconds per trial
+done with chunk size  11:  33.5 microseconds per trial
+done with chunk size  12:  34.3 microseconds per trial
+done with chunk size  13:  31.8 microseconds per trial
+done with chunk size  14:  45.1 microseconds per trial
+done with chunk size  15:  54.3 microseconds per trial
+done with chunk size  16:  63.7 microseconds per trial
+Re-test binary for another data point
+done with  binary search:  41.7 microseconds per trial
+Try some big numbers
+done with chunk size  32:  71.9 microseconds per trial
+done with chunk size  64:  87.4 microseconds per trial
+done with chunk size  128:  137.4 microseconds per trial
+done with chunk size  500:  403.6 microseconds per trial
+done with chunk size  3000:  1086.5 microseconds per trial
+done with chunk size  6000:  2281.9 microseconds per trial
+</pre>
+
+### Observations ###
+
+1. Using large chunk sizes (>=32, for example) clearly hurts
+   the performance of search and successor.
+
+2. The nested approach gives roughly comparable times to
+   BinarySearcher.
+
+3. The sweet spot for this particular run was using a chunk
+   size of 5 elements. I ran this many times, and it seems
+   pretty consistent that having 2 elements per list is
+   slow in my current implementation. The sweet spot between
+   reducing the actual number of comparisons to compute
+   (i.e small chunks) while being able to efficiently
+   compute things in linear loops (i.e. big chunks) seems
+   to be about 3 to 10 elements.
+
+                            
+

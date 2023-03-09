@@ -17,6 +17,9 @@ Try to implement the simplest possible class to implement search.
 
         Search returns LEFT, RIGHT, FOUND, or NOT_FOUND:
 
+            <---------------------------------------------------------------------->
+                      22      ...            33          ...         44
+
             ...LEFT  (22=FOUND) ...NOT_FOUND (33=FOUND) ...NOT_FOUND (44=FOUND) ...RIGHT
 
         Successor returns either an element or None:
@@ -90,7 +93,7 @@ STEP TWO:
     Create a NestedSearchTree class that can not only wrap N elements
     of SimpleSearch objects (giving you a way to store NxN elements in
     a two-level tree), but also wrap list of elements of itself (giving
-    you an arbitrary tall tree).
+    you an arbitrarily tall tree).
 
 
     Make this function support the same protocol as SimpleSearch, but
@@ -294,6 +297,41 @@ class BinarySearcher:
 
 test_easy_numbers(BinarySearcher)
 
+"""
+
+    UGLINESS: Build up trees of NestedSearchTree objects.
+
+        If this were production code, I would try to be a lot cleaner,
+        but for the purpose of gathering measurements, I want a quick
+        and dirty way to build up search trees.
+
+        MOST COMPLICATED TREE:
+
+            After retursion, this function could return something like:
+
+
+                A root NestedSearchTree
+                    containing a list of K
+                        NestedSearch elements, each of which
+                            contain a list of L NestedSearchTrees,
+                                each containing M BinarySearchers,
+                                    each containg P elements of some
+                                        comparable data type
+
+            Or more concisely:
+
+                NestedSearchTree (single root)
+                NestedSearchTree (K)
+                NestedSearchTree (K*L)
+                BinarySearcher   (K*L*M)
+                integers         (K*L*M*P)
+
+            (And, of course, we are not constrained to integers; we just
+            need our data type to support comparisons.)
+
+
+""" 
+    
 def build_searcher(lst, chunk_size):
     assert len(lst) > 0
 
@@ -317,6 +355,14 @@ def build_searcher(lst, chunk_size):
         i += chunk_size
 
     return recurse([recurse(sub_list) for sub_list in sub_lists])
+
+"""
+
+AND FINALLY!!!
+
+    Stress test various configurations.
+
+"""
 
 test_easy_numbers(lambda lst: build_searcher(lst, 10))
 
@@ -376,3 +422,5 @@ stress_test(numbers, 128)
 stress_test(numbers, 500)
 stress_test(numbers, 3000)
 stress_test(numbers, 6000)
+
+""" See the readme in this project for sample output. """
