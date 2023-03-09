@@ -2,6 +2,51 @@ import random
 import time
 import gc
 
+"""
+
+STEP ONE:
+
+Try to implement the simplest possible class to implement search.
+
+    MAIN DATA STRUCTURE: Ordinary Python list of ordered elements:
+
+        [22, 33, 44]
+
+
+    PROTOCOL:
+
+        Search returns LEFT, RIGHT, FOUND, or NOT_FOUND:
+
+            ...LEFT  (22=FOUND) ...NOT_FOUND (33=FOUND) ...NOT_FOUND (44=FOUND) ...RIGHT
+
+        Successor returns either an element or None:
+
+            <---------------------------------------------------------------------->
+                         22                33                44
+
+             s=22      s=22     s=33      s=33        s=44 s=44  None
+
+    ALGORITHM: Just use a simple linear search that exits as early as possible.
+
+    MINOR THINGS TO NOTE:
+        We have the LEFT/RIGHT values mostly for optimization purposes when
+        we embed ourselves into bigger collections (more on that to come).
+
+        We track min/max both for convenience sake, and to help us quickly
+        short-circuit computations for values "outside" our range of elements.
+
+    PROS:
+        1. It's easy to understand.
+        2. We can use this later to verify more complicated approachs.
+        3. It uses O(N) space (and is probably close to the most compact way to store an
+           arbitrary number of comparable elements in Python).
+
+    CONS:
+        1. Search is O(N), not O(log N). [We will discuss binary search later.]
+        2. If we stick with a single big Python list, then operations like insert and
+           delete will have worst-case O(N) time, and we know we can do much better.
+"""
+
 class SimpleSearch:
     def __init__(self, lst):
         assert len(lst) > 0
@@ -37,6 +82,36 @@ class SimpleSearch:
             if other <= child:
                 return child
         return None
+
+
+"""
+STEP TWO:
+
+    Create a NestedSearchTree class that can not only wrap N elements
+    of SimpleSearch objects (giving you a way to store NxN elements in
+    a two-level tree), but also wrap list of elements of itself (giving
+    you an arbitrary tall tree).
+
+
+    Make this function support the same protocol as SimpleSearch, but
+    we recursively call our children at times.
+
+    THINGS TO NOTE:
+
+        1) The NestedSearchTree class has very similar structure to
+           SimpleSearch in terms of the algorithms.
+
+        2) We do **linear** search at each level of the tree, but if we
+           take an N-sized data set and build up a data structure with a
+           tree of NestedSearchTree objects that each contain some bounded
+           constant number of nodes, then the searches will run in logN
+           time.
+
+        3) Our space usage is still O(N), which is good, but if we go
+           for super-granular nesting, we will probably double or triple
+           the constant factor for the upper bound.
+
+"""
 
 class NestedSearchTree:
     def __init__(self, lst):
@@ -77,6 +152,16 @@ class NestedSearchTree:
             if sub_successor is not None:
                 return sub_successor
         return None
+
+
+"""
+TESTING!!!!
+
+Since this is just kind of a one-day experiment, I don't get too
+bureaucratic about setting up unit tests.
+
+Instead, I rely heavily on a bunch of in-line assertions.
+"""
 
 def sanity_check(s):
     assert s.search(20) == "LEFT"
@@ -128,6 +213,38 @@ def test_easy_numbers(factory):
         assert searcher.search(100 * i - 17) == "NOT_FOUND"
 
 test_easy_numbers(SimpleSearch)
+
+"""
+
+    NEXT STEP: Add BinarySearcher
+
+    One of the shortcomings of SimpleSearch is that it's slow, so
+    I decided to address the slowness by arranging the **data** into
+    a tree of NestedSearchTree nodes.
+
+    I didn't **need** to re-arrange the data if all I cared about was
+    the speed of searches.  Instead, I can just do binary search on
+    a single Python list that stores ALL of my elements.  I can rely
+    on binary search running in log-time since accessing a random element
+    of a Python list requires O(1) time.
+
+    The drawback of BinarySearcher is that it doesn't allow for future
+    growth in terms of adding quick insert/delete/update operations.
+    (I didn't explore those in my one-day exoeriment, to be clear, but
+    I know that a tree-based structure is gonna be more flexible.)
+
+    NOTE:
+
+        1. The algorithms here are very vanilla, and then we also
+           support the "LEFT" and "RIGHT" protocols.
+
+        2. I did not micro-optimize the binary searches here at all.
+
+    GOAL:
+
+        We will use this class as a baseline for performance
+        measurements.
+"""
 
 class BinarySearcher:
     def __init__(self, lst):
