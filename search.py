@@ -11,9 +11,9 @@ class BinarySearcher:
 
     def search(self, other):
         if other < self.min:
-            return "L"
+            return "LEFT"
         if other > self.max:
-            return "R"
+            return "RIGHT"
 
         def f(i, j):
             if i >= j:
@@ -53,22 +53,30 @@ class SteveSearcher:
         self.lst = lst
         assert len(lst) > 0
         self.contains_containers = hasattr(self.lst[0], "is_container")
-        for i in range(len(lst) - 1):
-            child1, child2 = self.lst[i], self.lst[i+1]
-            assert self.child_max(child1) < self.child_min(child2)
-        self.min = self.child_min(self.lst[0])
-        self.max = self.child_max(self.lst[-1])
         self.is_container = True
+
+        if self.contains_containers:
+            for i in range(len(lst) - 1):
+                child1, child2 = self.lst[i], self.lst[i+1]
+                assert child1.max < child2.min
+            self.min = self.lst[0].min
+            self.max = self.lst[-1].max
+        else:
+            for i in range(len(lst) - 1):
+                child1, child2 = self.lst[i], self.lst[i+1]
+                assert child1 < child2
+            self.min = self.lst[0]
+            self.max = self.lst[-1]
 
     def search(self, other):
         if other < self.min:
-            return "L"
+            return "LEFT"
         if other > self.max:
-            return "R"
+            return "RIGHT"
         if self.contains_containers:
             for child in self.lst:
                 sub_result = child.search(other)
-                if sub_result in ["NOT_FOUND", "L"]:
+                if sub_result in ["NOT_FOUND", "LEFT"]:
                     return "NOT_FOUND"
                 elif sub_result == "FOUND":
                     return "FOUND"
@@ -98,24 +106,18 @@ class SteveSearcher:
                     return child
         return None
 
-    def child_min(self, child):
-        return child.min if self.contains_containers else child
-
-    def child_max(self, child):
-        return child.max if self.contains_containers else child
-
 SS = lambda *lst: SteveSearcher(lst)
 
 ss = SS(22, 33, 44)
 
 def sanity_check(ss):
-    assert ss.search(20) == "L"
+    assert ss.search(20) == "LEFT"
     assert ss.search(22) == "FOUND"
     assert ss.search(30) == "NOT_FOUND"
     assert ss.search(33) == "FOUND"
     assert ss.search(40) == "NOT_FOUND"
     assert ss.search(44) == "FOUND"
-    assert ss.search(50) == "R"
+    assert ss.search(50) == "RIGHT"
 
     assert ss.successor(20) == 22
     assert ss.successor(21) == 22
@@ -140,8 +142,8 @@ def test_easy_numbers(factory):
     M = 1500
     numbers = [100 * (i) for i in range(M)]
     searcher = factory(numbers)
-    assert searcher.search(-1) == "L"
-    assert searcher.search(M*100) == "R"
+    assert searcher.search(-1) == "LEFT"
+    assert searcher.search(M*100) == "RIGHT"
     assert searcher.successor(M*100) == None
     
     for i in range(M-1):
@@ -179,7 +181,7 @@ def make_nested_container(lst, chunk_size):
 
 test_easy_numbers(lambda lst: make_nested_container(lst, 10))
 
-U = 10 * 1000 * 1000 # universe of ints
+U = 100_000_000 # universe of ints
 
 def test_random_equivalencies():
     for i in range(10):
@@ -205,8 +207,8 @@ def stress_test(numbers, chunk_size):
 
     # Make sure our lst is at least plausibly correct.
     assert lst.search(numbers[0]) == "FOUND"
-    assert lst.search(-27.0) == "L"
-    assert lst.search(U+1) == "R"
+    assert lst.search(-27.0) == "LEFT"
+    assert lst.search(U+1) == "RIGHT"
     assert lst.successor(0) == numbers[0]
     assert lst.successor(U+1) == None
 
@@ -216,12 +218,12 @@ def stress_test(numbers, chunk_size):
         _ = lst.successor(n)
         _ = lst.search(n)
     delay = time.time() - t
-    delay = (delay * 1000000) / len(TEST_NUMBERS)
+    delay = (delay * 1_000_000) / len(TEST_NUMBERS)
     flavor = f"chunk size {chunk_size: 3d}" if chunk_size else " binary search"
     print(f"done with {flavor}: {delay: .1f} microseconds per trial")
 
 print("Building sample data")
-numbers = sorted(random.sample(range(U), k=1000000))
+numbers = sorted(random.sample(range(U), k=1_500_000))
 
 stress_test(numbers, 0)
 for i in range(2, 17):
