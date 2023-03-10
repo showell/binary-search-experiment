@@ -5,6 +5,14 @@ how much the granularity of a search tree impacts its performance
 for the simple operations of finding an element (search) or
 finding a nearby element (successor).
 
+### Audience ###
+
+I assume you will be interested in this if:
+* You know basic Python.
+* You know at least one tree-based data structure for searching.
+* You understand what "comparable" data types are.
+* You know what a `successor` function does on an ordered set of values. 
+
 ### SPOILER ALERT ###
 
 It seems like branches between 3 and 10 elements
@@ -21,6 +29,15 @@ also finding the successor (which rules out a simple hashing
 scheme).  Try to build a data structure which will eventually
 support reasonably fast inserts and deletes (which rules out
 having one giant Python list).
+
+#### Rules of the game ####
+
+* The `search()` and `successor()` may **ONLY** compare elements.
+* The caller should provide elements that are well ordered.
+* For the purpose of this exercise, assume all values in the container
+  are distinct, and there is at least one element in the container.
+* Use O(N) space for the data structure.
+* Assume a single thread of execution.
 
 #### Short answer #### 
 
