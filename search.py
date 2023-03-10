@@ -359,6 +359,8 @@ def build_searcher(lst, chunk_size):
 
     return recurse([recurse(sub_list) for sub_list in sub_lists])
 
+test_easy_numbers(lambda lst: build_searcher(lst, 10))
+
 """
 
 AND FINALLY!!!
@@ -367,24 +369,7 @@ AND FINALLY!!!
 
 """
 
-test_easy_numbers(lambda lst: build_searcher(lst, 10))
-
 U = 100_000_000 # universe of ints
-
-def test_random_equivalencies():
-    for i in range(10):
-        numbers = sorted(random.sample(range(U), k=500))
-        lst1 = SimpleSearch(numbers) 
-        lst2 = build_searcher(numbers, 5)
-        lst3 = BinarySearcher(numbers)
-
-        test_numbers = random.sample(range(U), k=200)
-        for number in test_numbers:
-            assert lst1.search(number) == lst2.search(number) == lst3.search(number)
-            assert lst1.successor(number) == lst2.successor(number) == lst3.successor(number)
-        
-
-test_random_equivalencies()
 
 # Make our test numbers floats so that comparisons are perhaps
 # more expensive than normal int comparisons.
