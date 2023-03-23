@@ -5,6 +5,9 @@ how much the granularity of a search tree impacts its performance
 for the simple operations of finding an element (search) or
 finding a nearby element (successor).
 
+See https://www.youtube.com/watch?v=ScWxzU2ip_c&feature=youtu.be
+for more context.
+
 ### Audience ###
 
 I assume you will be interested in this if:
